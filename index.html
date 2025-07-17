@@ -62,7 +62,8 @@
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Генератор ссылок для перенаправления</h1>
         <p class="text-gray-600 mb-6 text-center">
             Введите целевую ссылку, на которую вы хотите перенаправить.
-            Эта страница будет использовать JavaScript для создания ссылки, которая перенаправит пользователя.
+            Эта страница будет использовать JavaScript для создания ссылки, которая перенаправит пользователя,
+            при этом целевая ссылка будет обфусцирована в URL.
         </p>
 
         <div class="mb-6">
@@ -79,11 +80,11 @@
             id="generateLinkBtn"
             class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out font-semibold text-lg shadow-md"
         >
-            Сгенерировать ссылку для перенаправления
+            Сгенерировать обфусцированную ссылку
         </button>
 
         <div id="generatedLinkContainer" class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
-            <p class="text-blue-800 text-sm font-medium mb-2">Ваша ссылка для перенаправления:</p>
+            <p class="text-blue-800 text-sm font-medium mb-2">Ваша обфусцированная ссылка для перенаправления:</p>
             <div class="flex items-center space-x-3">
                 <input
                     type="text"
@@ -100,6 +101,7 @@
             </div>
             <p class="text-gray-500 text-xs mt-2">
                 Скопируйте эту ссылку и используйте ее. При открытии она перенаправит на вашу целевую ссылку.
+                Целевая ссылка скрыта с помощью кодирования Base64.
             </p>
         </div>
     </div>
@@ -118,6 +120,26 @@
             document.getElementById('overlay').style.display = 'none';
         }
 
+        // Вспомогательная функция для кодирования строки в Base64
+        function encodeBase64(str) {
+            // Используем btoa для кодирования в Base64.
+            // Для корректной работы с UTF-8 символами, сначала кодируем строку в UTF-8,
+            // затем в Base64.
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                function toSolidBytes(match, p1) {
+                    return String.fromCharCode('0x' + p1);
+                }));
+        }
+
+        // Вспомогательная функция для декодирования строки из Base64
+        function decodeBase64(str) {
+            // Используем atob для декодирования из Base64.
+            // Затем декодируем обратно из UTF-8.
+            return decodeURIComponent(atob(str).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const targetUrlInput = document.getElementById('targetUrlInput');
             const generateLinkBtn = document.getElementById('generateLinkBtn');
@@ -125,14 +147,14 @@
             const generatedLinkOutput = document.getElementById('generatedLinkOutput');
             const copyLinkBtn = document.getElementById('copyLinkBtn');
 
-            // Проверяем, есть ли параметр 'target' в URL при загрузке страницы
+            // Проверяем, есть ли параметр 'd' (для data) в URL при загрузке страницы
             const urlParams = new URLSearchParams(window.location.search);
-            const targetParam = urlParams.get('target');
+            const dataParam = urlParams.get('d'); // Используем 'd' вместо 'target'
 
-            if (targetParam) {
+            if (dataParam) {
                 try {
-                    // Декодируем URL и перенаправляем
-                    const decodedUrl = decodeURIComponent(targetParam);
+                    // Декодируем Base64 и перенаправляем
+                    const decodedUrl = decodeBase64(dataParam);
                     if (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://')) {
                         window.location.replace(decodedUrl); // Используем replace для предотвращения возврата в историю
                     } else {
@@ -160,14 +182,14 @@
                     return;
                 }
 
-                // Кодируем целевую ссылку, чтобы ее можно было безопасно передать как параметр URL
-                const encodedTargetUrl = encodeURIComponent(targetUrl);
+                // Кодируем целевую ссылку в Base64
+                const encodedTargetUrlBase64 = encodeBase64(targetUrl);
 
                 // Получаем текущий базовый URL страницы (без параметров запроса)
                 const baseUrl = window.location.origin + window.location.pathname;
 
-                // Формируем полную ссылку для перенаправления
-                const redirectLink = `${baseUrl}?target=${encodedTargetUrl}`;
+                // Формируем полную ссылку для перенаправления с обфусцированным параметром
+                const redirectLink = `${baseUrl}?d=${encodedTargetUrlBase64}`; // Используем 'd' для обфускации
 
                 // Отображаем сгенерированную ссылку
                 generatedLinkOutput.value = redirectLink;
@@ -190,3 +212,4 @@
     </script>
 </body>
 </html>
+
