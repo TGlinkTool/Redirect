@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор ссылок для перенаправления</title>
+    <!-- Подключение Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Установка шрифта Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Светло-серый фон */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* Стилизация для лучшего отображения на мобильных устройствах */
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+        .message-box {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            text-align: center;
+        }
+        .overlay {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+    <div class="message-box" id="messageBox">
+        <p id="messageText" class="text-lg font-semibold text-gray-800 mb-4"></p>
+        <button onclick="closeMessageBox()" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+            ОК
+        </button>
+    </div>
+
+    <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Генератор ссылок для перенаправления</h1>
+        <p class="text-gray-600 mb-6 text-center">
+            Введите целевую ссылку, на которую вы хотите перенаправить.
+            Эта страница будет использовать JavaScript для создания ссылки, которая перенаправит пользователя.
+        </p>
+
+        <div class="mb-6">
+            <label for="targetUrlInput" class="block text-gray-700 text-sm font-medium mb-2">Целевая ссылка:</label>
+            <input
+                type="url"
+                id="targetUrlInput"
+                placeholder="Например: https://example.com/your-page"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out text-gray-800"
+            />
+        </div>
+
+        <button
+            id="generateLinkBtn"
+            class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out font-semibold text-lg shadow-md"
+        >
+            Сгенерировать ссылку для перенаправления
+        </button>
+
+        <div id="generatedLinkContainer" class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+            <p class="text-blue-800 text-sm font-medium mb-2">Ваша ссылка для перенаправления:</p>
+            <div class="flex items-center space-x-3">
+                <input
+                    type="text"
+                    id="generatedLinkOutput"
+                    readonly
+                    class="flex-grow px-3 py-2 bg-blue-100 border border-blue-300 rounded-md text-blue-900 text-sm truncate"
+                />
+                <button
+                    id="copyLinkBtn"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out text-sm font-medium"
+                >
+                    Копировать
+                </button>
+            </div>
+            <p class="text-gray-500 text-xs mt-2">
+                Скопируйте эту ссылку и используйте ее. При открытии она перенаправит на вашу целевую ссылку.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Функция для отображения пользовательского диалогового окна
+        function showMessageBox(message) {
+            document.getElementById('messageText').innerText = message;
+            document.getElementById('messageBox').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        // Функция для закрытия пользовательского диалогового окна
+        function closeMessageBox() {
+            document.getElementById('messageBox').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const targetUrlInput = document.getElementById('targetUrlInput');
+            const generateLinkBtn = document.getElementById('generateLinkBtn');
+            const generatedLinkContainer = document.getElementById('generatedLinkContainer');
+            const generatedLinkOutput = document.getElementById('generatedLinkOutput');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+
+            // Проверяем, есть ли параметр 'target' в URL при загрузке страницы
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetParam = urlParams.get('target');
+
+            if (targetParam) {
+                try {
+                    // Декодируем URL и перенаправляем
+                    const decodedUrl = decodeURIComponent(targetParam);
+                    if (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://')) {
+                        window.location.replace(decodedUrl); // Используем replace для предотвращения возврата в историю
+                    } else {
+                        showMessageBox('Неверный формат целевой ссылки в параметре URL.');
+                    }
+                } catch (e) {
+                    showMessageBox('Ошибка при декодировании целевой ссылки: ' + e.message);
+                }
+            }
+
+            // Обработчик кнопки "Сгенерировать ссылку"
+            generateLinkBtn.addEventListener('click', () => {
+                const targetUrl = targetUrlInput.value.trim();
+
+                if (!targetUrl) {
+                    showMessageBox('Пожалуйста, введите целевую ссылку.');
+                    return;
+                }
+
+                // Базовая валидация URL
+                try {
+                    new URL(targetUrl); // Проверяем, является ли строка валидным URL
+                } catch (e) {
+                    showMessageBox('Пожалуйста, введите корректный URL (например, начинающийся с http:// или https://).');
+                    return;
+                }
+
+                // Кодируем целевую ссылку, чтобы ее можно было безопасно передать как параметр URL
+                const encodedTargetUrl = encodeURIComponent(targetUrl);
+
+                // Получаем текущий базовый URL страницы (без параметров запроса)
+                const baseUrl = window.location.origin + window.location.pathname;
+
+                // Формируем полную ссылку для перенаправления
+                const redirectLink = `${baseUrl}?target=${encodedTargetUrl}`;
+
+                // Отображаем сгенерированную ссылку
+                generatedLinkOutput.value = redirectLink;
+                generatedLinkContainer.classList.remove('hidden');
+            });
+
+            // Обработчик кнопки "Копировать"
+            copyLinkBtn.addEventListener('click', () => {
+                generatedLinkOutput.select();
+                generatedLinkOutput.setSelectionRange(0, 99999); // Для мобильных устройств
+
+                try {
+                    document.execCommand('copy');
+                    showMessageBox('Ссылка скопирована в буфер обмена!');
+                } catch (err) {
+                    showMessageBox('Не удалось скопировать ссылку. Пожалуйста, скопируйте ее вручную.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
