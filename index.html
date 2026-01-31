@@ -3,24 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>V2Config Secure</title>
+    <title>V2Config</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <!-- Подключаем JSZip для функции "Скачать всё" -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <style>
-        /* --- Material Design 3 (Dark Theme) --- */
+        /* --- Material Design 3 (Red Theme) --- */
         :root {
             --md-sys-color-background: #111318;
             --md-sys-color-surface: #191C20;
-            --md-sys-color-surface-container: #1F2329;
+            --md-sys-color-surface-container: #201A1A; /* Чуть красноватый оттенок черного */
             --md-sys-color-on-surface: #E2E2E6;
-            --md-sys-color-on-surface-variant: #C4C6D0;
-            --md-sys-color-primary: #A8C7FA;
-            --md-sys-color-on-primary: #0F305F;
-            --md-sys-color-primary-container: #274777;
-            --md-sys-color-on-primary-container: #D7E3FF;
+            --md-sys-color-on-surface-variant: #D0C4C4;
+            
+            /* Основной цвет #FF1D10 */
+            --md-sys-color-primary: #FF1D10; 
+            --md-sys-color-on-primary: #FFFFFF;
+            
+            /* Контейнеры (фон кнопок и активных элементов) */
+            --md-sys-color-primary-container: #93000A; /* Темно-красный */
+            --md-sys-color-on-primary-container: #FFDAD6; /* Светло-розовый текст */
+            
             --md-sys-color-outline: #8E9099;
             --radius-lg: 16px;
+            --bottom-bar-height: 80px;
         }
 
         body {
@@ -41,7 +49,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,29,16,0.1);
         }
 
         h1 { margin: 0; font-size: 22px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
@@ -56,6 +64,7 @@
             background-color: var(--md-sys-color-surface-container);
             border-radius: var(--radius-lg);
             padding: 16px;
+            border: 1px solid rgba(255,29,16,0.1);
         }
 
         .toggle-row {
@@ -112,7 +121,7 @@
         /* List */
         .list-container {
             flex: 1;
-            padding: 0 16px 16px 16px;
+            padding: 0 16px var(--bottom-bar-height) 16px; /* Отступ снизу для кнопки */
             overflow-y: auto;
         }
 
@@ -126,6 +135,7 @@
             justify-content: space-between;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             transition: background-color 0.2s;
+            gap: 8px;
         }
         .card:active {
             background-color: var(--md-sys-color-surface-container);
@@ -137,17 +147,18 @@
             gap: 12px;
             overflow: hidden;
             flex: 1;
+            cursor: pointer;
         }
 
         .icon-box {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: #33445A;
+            background-color: rgba(255, 29, 16, 0.15); /* Прозрачный красный */
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #DAE2F9;
+            color: var(--md-sys-color-primary);
             flex-shrink: 0;
         }
 
@@ -155,7 +166,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            margin-right: 10px;
+            margin-right: 5px;
         }
 
         .file-name {
@@ -172,39 +183,109 @@
             margin-top: 2px;
         }
 
-        .dl-btn {
-            background: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            border: none;
+        /* Кнопки действий */
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: var(--md-sys-color-surface-container);
+            color: var(--md-sys-color-primary);
+            border: 1px solid rgba(255,29,16,0.2);
             width: 44px;
             height: 44px;
-            border-radius: 50%;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
-            transition: transform 0.1s, opacity 0.2s;
+            transition: all 0.2s;
             position: relative;
             overflow: hidden;
         }
-        .dl-btn:active { transform: scale(0.95); }
         
-        .dl-btn.loading { 
-            pointer-events: none; 
-            background: transparent;
-            border: 2px solid var(--md-sys-color-primary);
+        /* Особый стиль для кнопки скачивания */
+        .action-btn.download {
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border: none;
+            border-radius: 50%; /* Круглая */
         }
-        .dl-btn.loading span { opacity: 0; }
-        .dl-btn.loading::after {
+
+        .action-btn:active { transform: scale(0.95); }
+        
+        .action-btn.loading { 
+            pointer-events: none; 
+            opacity: 0.8;
+        }
+        .action-btn.loading span { opacity: 0; }
+        .action-btn.loading::after {
             content: "";
             position: absolute;
             width: 18px;
             height: 18px;
-            border: 2px solid var(--md-sys-color-primary);
+            border: 2px solid currentColor;
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: linear-gradient(to top, var(--md-sys-color-background) 80%, transparent);
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .download-all-btn {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border: none;
+            height: 56px;
+            border-radius: 28px;
+            padding: 0 32px;
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .download-all-btn:active { transform: scale(0.98); }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background-color: #303030;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 200;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
 
         /* State Messages */
@@ -213,7 +294,7 @@
             margin-top: 40px;
             color: var(--md-sys-color-on-surface-variant);
             padding: 20px;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,29,16,0.05);
             border-radius: 12px;
         }
         .msg-sub {
@@ -228,10 +309,6 @@
 <body>
 
     <header>
-        <h1>
-            <span class="material-symbols-rounded shield-icon">encrypted</span>
-            <span>V2Config</span>
-        </h1>
     </header>
 
     <div class="controls">
@@ -257,17 +334,51 @@
         <!-- JS Injection -->
     </div>
 
+    <div class="bottom-bar" id="bottomBar">
+        <button class="download-all-btn" id="btnDownloadAll" onclick="downloadAllVisible()">
+            <span class="material-symbols-rounded">folder_zip</span>
+            Скачать всё (ZIP)
+        </button>
+    </div>
+
+    <div id="toast" class="toast">Текст уведомления</div>
+
     <script>
         const REPO = 'igareck/vpn-configs-for-russia';
         const API = `https://api.github.com/repos/${REPO}/contents/`;
 
+        // --- ЛОГИКА ПРОВЕРКИ ПОДДЕРЖКИ СКАЧИВАНИЯ ---
+        // 1. Проверяем, поддерживает ли тег <a> атрибут download
+        // 2. Проверяем, не запущено ли это как PWA на iOS (navigator.standalone), 
+        //    так как там скачивание файлов часто блокируется системой.
+        const supportsDownloadAttr = 'download' in document.createElement('a');
+        const isIosStandalone = window.navigator.standalone === true;
+        
+        // Итоговый флаг: Можно ли скачивать?
+        const CAN_DOWNLOAD = supportsDownloadAttr && !isIosStandalone;
+
         let rawFiles = [];
+        let currentVisibleFiles = [];
+        
         const elList = document.getElementById('list');
         const swWhite = document.getElementById('checkWhite');
         const swBlack = document.getElementById('checkBlack');
+        const toastEl = document.getElementById('toast');
+        const btnDownloadAll = document.getElementById('btnDownloadAll');
+        const bottomBar = document.getElementById('bottomBar');
 
         // Инициализация
         (async () => {
+            
+            // Если скачивание не поддерживается, убираем нижнюю панель
+            if (!CAN_DOWNLOAD) {
+                if (bottomBar) bottomBar.style.display = 'none';
+                elList.style.paddingBottom = '20px'; // Убираем лишний отступ снизу
+                // Также корректируем позицию тоста, чтобы он не висел высоко
+                document.documentElement.style.setProperty('--bottom-bar-height', '0px');
+                toastEl.style.bottom = '30px'; 
+            }
+
             elList.innerHTML = '<div class="msg-box">Загрузка списка конфигураций...</div>';
             try {
                 const res = await fetch(API);
@@ -299,7 +410,7 @@
             const showW = swWhite.checked;
             const showB = swBlack.checked;
 
-            const visible = rawFiles.filter(f => {
+            currentVisibleFiles = rawFiles.filter(f => {
                 const n = f.name.toLowerCase();
                 const isW = n.includes('white');
                 const isB = n.includes('black');
@@ -308,12 +419,23 @@
                 return false;
             });
 
-            if(visible.length === 0) {
+            // Обновляем кнопку "Скачать всё" только если скачивание разрешено
+            if (CAN_DOWNLOAD) {
+                if (currentVisibleFiles.length === 0) {
+                    btnDownloadAll.style.opacity = '0.5';
+                    btnDownloadAll.style.pointerEvents = 'none';
+                    elList.innerHTML = '<div class="msg-box">Нет конфигураций для выбранных фильтров</div>';
+                    return;
+                } else {
+                    btnDownloadAll.style.opacity = '1';
+                    btnDownloadAll.style.pointerEvents = 'auto';
+                }
+            } else if (currentVisibleFiles.length === 0) {
                 elList.innerHTML = '<div class="msg-box">Нет конфигураций для выбранных фильтров</div>';
                 return;
             }
 
-            visible.forEach(f => {
+            currentVisibleFiles.forEach(f => {
                 const item = document.createElement('div');
                 item.className = 'card';
                 
@@ -328,8 +450,15 @@
                     .replace('.ovpn', '')
                     .replace('.conf', '');
 
+                // Формируем HTML кнопки скачивания только если поддерживается
+                const downloadButtonHtml = CAN_DOWNLOAD ? `
+                    <button class="action-btn download" onclick="downloadSecure(this, '${f.download_url}', '${f.name}')" title="Скачать файл">
+                        <span class="material-symbols-rounded">download</span>
+                    </button>
+                ` : '';
+
                 item.innerHTML = `
-                    <div class="card-info" onclick="downloadSecure(this.nextElementSibling, '${f.download_url}', '${f.name}')">
+                    <div class="card-info" onclick="copyContent(this.nextElementSibling.querySelector('.copy-btn'), '${f.download_url}')">
                         <div class="icon-box">
                             <span class="material-symbols-rounded">${icon}</span>
                         </div>
@@ -338,47 +467,124 @@
                             <div class="file-tag">${type}</div>
                         </div>
                     </div>
-                    <button class="dl-btn" onclick="downloadSecure(this, '${f.download_url}', '${f.name}')">
-                        <span class="material-symbols-rounded">download</span>
-                    </button>
+                    <div class="actions">
+                        <button class="action-btn copy-btn" onclick="copyContent(this, '${f.download_url}')" title="Копировать содержимое">
+                            <span class="material-symbols-rounded">content_copy</span>
+                        </button>
+                        ${downloadButtonHtml}
+                    </div>
                 `;
                 elList.appendChild(item);
             });
         }
 
-        // --- БЕЗОПАСНАЯ ЗАГРУЗКА ---
-        // Скрывает источник файла, используя Blob и force-download
+        // --- КОПИРОВАНИЕ В БУФЕР ---
+        async function copyContent(btn, url) {
+            if(btn.classList.contains('loading')) return;
+            
+            // Визуальный эффект загрузки
+            const originalIcon = btn.innerHTML;
+            btn.classList.add('loading');
+
+            try {
+                const response = await fetch(url);
+                if(!response.ok) throw new Error('Ошибка сети');
+                const text = await response.text();
+
+                // Копирование
+                await navigator.clipboard.writeText(text);
+
+                // Успех
+                btn.classList.remove('loading');
+                btn.innerHTML = '<span class="material-symbols-rounded">check</span>';
+                showToast('Скопировано в буфер!');
+
+                // Возврат иконки
+                setTimeout(() => {
+                    btn.innerHTML = '<span class="material-symbols-rounded">content_copy</span>';
+                }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                btn.classList.remove('loading');
+                showToast('Ошибка копирования');
+            }
+        }
+
+        // --- СКАЧАТЬ ВСЁ (ZIP) ---
+        async function downloadAllVisible() {
+            if (!CAN_DOWNLOAD) return; // Защита
+            if (currentVisibleFiles.length === 0) return;
+
+            const btnText = btnDownloadAll.innerHTML;
+            btnDownloadAll.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Упаковка...';
+            btnDownloadAll.style.pointerEvents = 'none';
+
+            try {
+                const zip = new JSZip();
+                
+                // Параллельная загрузка всех файлов
+                const promises = currentVisibleFiles.map(async file => {
+                    try {
+                        const response = await fetch(file.download_url);
+                        if (!response.ok) throw new Error(`Fail ${file.name}`);
+                        const blob = await response.blob();
+                        zip.file(file.name, blob);
+                    } catch (e) {
+                        console.error(e); // Пропускаем битые файлы
+                    }
+                });
+
+                await Promise.all(promises);
+
+                // Генерация ZIP
+                const content = await zip.generateAsync({type:"blob"});
+                
+                // Скачивание ZIP
+                const blobUrl = window.URL.createObjectURL(content);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = "vpn_configs_red.zip";
+                document.body.appendChild(link);
+                link.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(blobUrl);
+                }, 1000);
+                
+                showToast('Архив скачан!');
+
+            } catch (err) {
+                console.error(err);
+                showToast('Ошибка при создании архива');
+            } finally {
+                btnDownloadAll.innerHTML = btnText;
+                btnDownloadAll.style.pointerEvents = 'auto';
+            }
+        }
+
+        // --- БЕЗОПАСНАЯ ЗАГРУЗКА (Одиночная) ---
         async function downloadSecure(btn, url, fileName) {
+            if (!CAN_DOWNLOAD) return; // Защита
             if(btn.classList.contains('loading')) return;
             btn.classList.add('loading');
             
             try {
-                // 1. Скачиваем файл внутри JS (GitHub видит запрос, но браузер не переходит по ссылке)
                 const response = await fetch(url);
                 if(!response.ok) throw new Error('Network error');
-                
-                // 2. Получаем бинарные данные
                 const blob = await response.blob();
-                
-                // 3. Создаем "фальшивый" файл с типом octet-stream
-                // Это заставляет браузер именно сохранять файл, а не открывать его как текст
                 const newBlob = new Blob([blob], { type: 'application/octet-stream' });
                 const blobUrl = window.URL.createObjectURL(newBlob);
                 
-                // 4. Создаем невидимую ссылку для клика
                 const link = document.createElement('a');
                 link.href = blobUrl;
                 link.download = fileName;
-                
-                // ВАЖНО: target="_blank" в сочетании с download 
-                // часто заставляет мобильные WebView (Telegram/VK) передать 
-                // файл во внешний системный менеджер загрузок.
                 link.target = "_blank"; 
                 
                 document.body.appendChild(link);
                 link.click();
                 
-                // Чистка
                 setTimeout(() => {
                     document.body.removeChild(link);
                     window.URL.revokeObjectURL(blobUrl);
@@ -388,13 +594,21 @@
             } catch (err) {
                 console.error(err);
                 btn.classList.remove('loading');
-                
-                // Fallback (Запасной вариант):
-                // Если прокси-загрузка не удалась, спрашиваем пользователя
-                if(confirm('Не удалось скачать в скрытом режиме. Открыть прямую ссылку? (Источник будет виден)')) {
+                if(confirm('Не удалось скачать скрыто. Открыть ссылку напрямую?')) {
                     window.open(url, '_blank');
                 }
             }
+        }
+
+        // Утилита для уведомлений
+        let toastTimeout;
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastEl.classList.remove('show');
+            }, 3000);
         }
     </script>
 </body>
