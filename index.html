@@ -14,7 +14,7 @@
         :root {
             --md-sys-color-background: #111318;
             --md-sys-color-surface: #191C20;
-            --md-sys-color-surface-container: #201A1A; /* Чуть красноватый оттенок черного */
+            --md-sys-color-surface-container: #201A1A;
             --md-sys-color-on-surface: #E2E2E6;
             --md-sys-color-on-surface-variant: #D0C4C4;
             
@@ -23,8 +23,8 @@
             --md-sys-color-on-primary: #FFFFFF;
             
             /* Контейнеры (фон кнопок и активных элементов) */
-            --md-sys-color-primary-container: #93000A; /* Темно-красный */
-            --md-sys-color-on-primary-container: #FFDAD6; /* Светло-розовый текст */
+            --md-sys-color-primary-container: #93000A;
+            --md-sys-color-on-primary-container: #FFDAD6;
             
             --md-sys-color-outline: #8E9099;
             --radius-lg: 16px;
@@ -53,7 +53,6 @@
         }
 
         h1 { margin: 0; font-size: 22px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
-        .shield-icon { color: var(--md-sys-color-primary); }
 
         /* Filter Controls */
         .controls {
@@ -121,7 +120,7 @@
         /* List */
         .list-container {
             flex: 1;
-            padding: 0 16px var(--bottom-bar-height) 16px; /* Отступ снизу для кнопки */
+            padding: 0 16px var(--bottom-bar-height) 16px;
             overflow-y: auto;
         }
 
@@ -154,7 +153,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: rgba(255, 29, 16, 0.15); /* Прозрачный красный */
+            background-color: rgba(255, 29, 16, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -206,12 +205,11 @@
             overflow: hidden;
         }
         
-        /* Особый стиль для кнопки скачивания */
         .action-btn.download {
             background: var(--md-sys-color-primary-container);
             color: var(--md-sys-color-on-primary-container);
             border: none;
-            border-radius: 50%; /* Круглая */
+            border-radius: 50%;
         }
 
         .action-btn:active { transform: scale(0.95); }
@@ -348,14 +346,21 @@
         const API = `https://api.github.com/repos/${REPO}/contents/`;
 
         // --- ЛОГИКА ПРОВЕРКИ ПОДДЕРЖКИ СКАЧИВАНИЯ ---
-        // 1. Проверяем, поддерживает ли тег <a> атрибут download
-        // 2. Проверяем, не запущено ли это как PWA на iOS (navigator.standalone), 
-        //    так как там скачивание файлов часто блокируется системой.
-        const supportsDownloadAttr = 'download' in document.createElement('a');
+        const ua = navigator.userAgent.toLowerCase();
+
+        // 1. Проверка на Telegram и другие популярные WebView, где скачивание часто не работает
+        const isTelegram = ua.includes('telegram');
+        const isInstagram = ua.includes('instagram');
+        const isRestrictedWebview = isTelegram || isInstagram;
+
+        // 2. iOS PWA (standalone)
         const isIosStandalone = window.navigator.standalone === true;
-        
-        // Итоговый флаг: Можно ли скачивать?
-        const CAN_DOWNLOAD = supportsDownloadAttr && !isIosStandalone;
+
+        // 3. Поддержка атрибута download
+        const supportsDownloadAttr = 'download' in document.createElement('a');
+
+        // Итоговое решение: Можно качать ТОЛЬКО если это не Телеграм/Инстаграм, не PWA и есть поддержка download
+        const CAN_DOWNLOAD = !isRestrictedWebview && !isIosStandalone && supportsDownloadAttr;
 
         let rawFiles = [];
         let currentVisibleFiles = [];
@@ -370,11 +375,11 @@
         // Инициализация
         (async () => {
             
-            // Если скачивание не поддерживается, убираем нижнюю панель
+            // Если скачивание запрещено (например, внутри Telegram), скрываем интерфейс загрузки
             if (!CAN_DOWNLOAD) {
                 if (bottomBar) bottomBar.style.display = 'none';
-                elList.style.paddingBottom = '20px'; // Убираем лишний отступ снизу
-                // Также корректируем позицию тоста, чтобы он не висел высоко
+                elList.style.paddingBottom = '20px'; // Убираем отступ под кнопку
+                // Опускаем тост ниже, раз панели нет
                 document.documentElement.style.setProperty('--bottom-bar-height', '0px');
                 toastEl.style.bottom = '30px'; 
             }
@@ -419,7 +424,7 @@
                 return false;
             });
 
-            // Обновляем кнопку "Скачать всё" только если скачивание разрешено
+            // Кнопка "Скачать всё" (только если разрешено скачивание)
             if (CAN_DOWNLOAD) {
                 if (currentVisibleFiles.length === 0) {
                     btnDownloadAll.style.opacity = '0.5';
@@ -450,8 +455,8 @@
                     .replace('.ovpn', '')
                     .replace('.conf', '');
 
-                // Формируем HTML кнопки скачивания только если поддерживается
-                const downloadButtonHtml = CAN_DOWNLOAD ? `
+                // Генерируем HTML кнопки скачивания ТОЛЬКО если можно качать
+                const downloadBtnHtml = CAN_DOWNLOAD ? `
                     <button class="action-btn download" onclick="downloadSecure(this, '${f.download_url}', '${f.name}')" title="Скачать файл">
                         <span class="material-symbols-rounded">download</span>
                     </button>
@@ -471,7 +476,7 @@
                         <button class="action-btn copy-btn" onclick="copyContent(this, '${f.download_url}')" title="Копировать содержимое">
                             <span class="material-symbols-rounded">content_copy</span>
                         </button>
-                        ${downloadButtonHtml}
+                        ${downloadBtnHtml}
                     </div>
                 `;
                 elList.appendChild(item);
