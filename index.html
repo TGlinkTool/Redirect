@@ -3,435 +3,629 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>V2Config</title>
+    <meta name="theme-color" content="#0f1014">
+    <title>V2Config Expressive</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <style>
-        /* --- Material Design 3 (Red Theme) --- */
+        /* --- Material Design 3 Expressive Tokens (Dark Red Theme) --- */
         :root {
-            --md-sys-color-background: #111318;
-            --md-sys-color-surface: #191C20;
-            --md-sys-color-surface-container: #201A1A;
-            --md-sys-color-on-surface: #E2E2E6;
-            --md-sys-color-on-surface-variant: #D0C4C4;
-            --md-sys-color-primary: #FF1D10; 
-            --md-sys-color-on-primary: #FFFFFF;
-            --md-sys-color-primary-container: #93000A;
-            --md-sys-color-on-primary-container: #FFDAD6;
-            --md-sys-color-outline: #8E9099;
-            --radius-lg: 16px;
-            --bottom-bar-height: 80px;
+            /* Base Colors */
+            --md-sys-color-background: #0f1014;
+            --md-sys-color-on-background: #e2e2e6;
+            
+            /* Surfaces - Hierarchy */
+            --md-sys-color-surface: #0f1014;
+            --md-sys-color-surface-container-low: #191c20;
+            --md-sys-color-surface-container: #1d2024;
+            --md-sys-color-surface-container-high: #282a2f;
+            --md-sys-color-surface-container-highest: #33353a;
+            
+            /* Typography Colors */
+            --md-sys-color-on-surface: #e2e2e6;
+            --md-sys-color-on-surface-variant: #c4c7cf;
+            --md-sys-color-outline: #8e9099;
+            --md-sys-color-outline-variant: #44474f;
+
+            /* Primary (Expressive Red) */
+            --md-sys-color-primary: #ffb4a8;
+            --md-sys-color-on-primary: #690005;
+            --md-sys-color-primary-container: #93000a;
+            --md-sys-color-on-primary-container: #ffdad6;
+
+            /* Secondary */
+            --md-sys-color-secondary-container: #4a4458;
+            --md-sys-color-on-secondary-container: #e8def8;
+
+            /* Shapes */
+            --radius-m: 12px;
+            --radius-l: 16px;
+            --radius-xl: 28px;
+            --radius-full: 9999px;
+            
+            /* Layout */
+            --header-collapsed-height: 64px;
+            --header-expanded-height: 152px;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--md-sys-color-background);
-            color: var(--md-sys-color-on-surface);
+            color: var(--md-sys-color-on-background);
             font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden;
         }
 
+        /* --- Typography (Expressive) --- */
+        .display-small { font-size: 36px; line-height: 44px; font-weight: 400; }
+        .headline-small { font-size: 24px; line-height: 32px; font-weight: 400; }
+        .title-medium { font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: 0.15px; }
+        .label-large { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; }
+        .body-medium { font-size: 14px; line-height: 20px; font-weight: 400; letter-spacing: 0.25px; }
+        .body-small { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0.4px; }
+
+        /* --- Layout & Scroll --- */
+        .main-container {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            scroll-behavior: smooth;
+        }
+
+        /* --- Expressive Header (Collapsing) --- */
         header {
-            padding: 24px 16px;
             background-color: var(--md-sys-color-background);
+            padding: 16px 24px 24px 24px;
             position: sticky;
             top: 0;
             z-index: 10;
-            border-bottom: 1px solid rgba(255,29,16,0.1);
+            transition: background-color 0.2s, box-shadow 0.2s, padding 0.3s;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
         }
 
-        h1 { margin: 0; font-size: 22px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
-
-        .controls { padding: 16px; }
-
-        .filter-card {
+        header.scrolled {
             background-color: var(--md-sys-color-surface-container);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            border: 1px solid rgba(255,29,16,0.1);
+            padding: 12px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-radius: 0 0 24px 24px;
         }
 
-        .toggle-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .toggle-row:last-child { margin-bottom: 0; }
-
-        .toggle-label { font-size: 16px; }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 48px;
-            height: 28px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #44474F;
-            border-radius: 34px;
-            transition: .3s;
-            border: 2px solid var(--md-sys-color-outline);
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 14px;
-            width: 14px;
-            left: 5px;
-            bottom: 5px;
-            background-color: #AAABBB;
-            border-radius: 50%;
-            transition: .3s;
-        }
-        input:checked + .slider {
-            background-color: var(--md-sys-color-primary);
-            border-color: var(--md-sys-color-primary);
-        }
-        input:checked + .slider:before {
-            transform: translateX(20px);
-            background-color: var(--md-sys-color-on-primary);
-            width: 20px;
-            height: 20px;
-            left: 2px;
-            bottom: 2px;
-        }
-
-        .list-container {
-            flex: 1;
-            padding: 0 16px var(--bottom-bar-height) 16px;
-            overflow-y: auto;
-        }
-
-        .card {
-            background-color: var(--md-sys-color-surface);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            transition: background-color 0.2s;
-            gap: 8px;
-        }
-        .card:active {
-            background-color: var(--md-sys-color-surface-container);
-        }
-
-        .card-info {
+        .header-top {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 8px;
+            transition: margin 0.3s;
+        }
+        header.scrolled .header-top { margin-bottom: 0; }
+
+        .brand-icon { 
+            color: var(--md-sys-color-primary); 
+            font-size: 32px; 
+            transition: font-size 0.3s;
+        }
+        header.scrolled .brand-icon { font-size: 24px; }
+
+        .app-title {
+            transition: font-size 0.3s;
+        }
+        header.scrolled .app-title { font-size: 22px; line-height: 28px; }
+
+        .update-info {
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 1;
+            max-height: 40px;
             overflow: hidden;
-            flex: 1;
-            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        header.scrolled .update-info {
+            opacity: 0;
+            max-height: 0;
+            margin: 0;
         }
 
-        .icon-box {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: rgba(255, 29, 16, 0.15);
+        .update-badge {
+            background-color: var(--md-sys-color-surface-container-high);
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Моноширинный шрифт для цифр выглядит более "технично" */
+        #updateText {
+            font-variant-numeric: tabular-nums; 
+        }
+
+        /* --- Content Area --- */
+        .content-wrapper {
+            padding: 16px;
+            padding-bottom: 100px; /* Space for FAB */
+        }
+
+        /* --- Filters (Chips style) --- */
+        .filters-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 4px; /* Scrollbar spacing */
+        }
+
+        .filter-chip {
+            background-color: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline);
+            color: var(--md-sys-color-on-surface-variant);
+            padding: 8px 16px 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .filter-chip.active {
+            background-color: var(--md-sys-color-secondary-container);
+            color: var(--md-sys-color-on-secondary-container);
+            border-color: transparent;
+        }
+
+        .filter-chip .check-icon {
+            font-size: 18px;
+            width: 0;
+            opacity: 0;
+            transition: all 0.2s;
+            transform: scale(0);
+        }
+
+        .filter-chip.active .check-icon {
+            width: 18px;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- Expressive List --- */
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background-color: var(--md-sys-color-surface-container-low);
+            border-radius: var(--radius-l);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.2s, transform 0.2s;
+            cursor: pointer;
+            
+            /* Entry Animation */
+            opacity: 0;
+            animation: fadeInUp 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card:active {
+            background-color: var(--md-sys-color-surface-container-high);
+            transform: scale(0.98);
+        }
+
+        .card-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background-color: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--md-sys-color-primary);
+            font-size: 24px;
             flex-shrink: 0;
         }
 
-        .file-details {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            margin-right: 5px;
+        .card-content {
+            flex: 1;
+            min-width: 0;
         }
 
-        .file-name {
-            font-size: 15px;
-            font-weight: 500;
+        .card-title {
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 4px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .file-tag {
-            font-size: 12px;
-            color: var(--md-sys-color-on-surface-variant);
-            margin-top: 2px;
-        }
-
-        .actions {
+        .card-meta {
             display: flex;
+            align-items: center;
             gap: 8px;
+            color: var(--md-sys-color-on-surface-variant);
         }
 
-        .action-btn {
-            background: var(--md-sys-color-surface-container);
-            color: var(--md-sys-color-primary);
-            border: 1px solid rgba(255,29,16,0.2);
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .action-btn.download {
-            background: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            border: none;
-            border-radius: 50%;
-        }
-
-        .action-btn:active { transform: scale(0.95); }
-        
-        .action-btn.loading { 
-            pointer-events: none; 
-            opacity: 0.8;
-        }
-        .action-btn.loading span { opacity: 0; }
-        .action-btn.loading::after {
-            content: "";
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            border: 2px solid currentColor;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 16px;
-            background: linear-gradient(to top, var(--md-sys-color-background) 80%, transparent);
-            display: flex;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .download-all-btn {
-            background-color: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            border: none;
-            height: 56px;
-            border-radius: 28px;
-            padding: 0 32px;
-            font-size: 16px;
+        .tag {
+            background-color: var(--md-sys-color-surface-container-high);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- SKELETON LOADING (Shimmer) --- */
+        .skeleton {
+            background: linear-gradient(90deg, 
+                var(--md-sys-color-surface-container-low) 25%, 
+                var(--md-sys-color-surface-container-high) 50%, 
+                var(--md-sys-color-surface-container-low) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            color: transparent !important;
+        }
+        
+        .skeleton-card {
+            pointer-events: none;
+            opacity: 1 !important; /* Override animation for skeleton */
+            transform: none !important;
+        }
+        
+        .skeleton-icon { width: 48px; height: 48px; border-radius: 16px; }
+        .skeleton-text { height: 16px; width: 60%; margin-bottom: 8px; }
+        .skeleton-sub { height: 12px; width: 40%; }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* --- FAB --- */
+        .fab-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 20;
+        }
+
+        .fab-extended {
+            height: 56px;
+            border-radius: 16px; /* Slightly squarer for expressive */
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
             display: flex;
             align-items: center;
+            padding: 0 24px 0 16px;
             gap: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             cursor: pointer;
-            width: 100%;
-            max-width: 400px;
-            justify-content: center;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
         }
-        .download-all-btn:active { transform: scale(0.98); }
 
+        .fab-extended:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* --- Toast --- */
         .toast {
             position: fixed;
-            bottom: 90px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background-color: #303030;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
-            font-size: 14px;
+            background-color: var(--md-sys-color-on-surface);
+            color: var(--md-sys-color-surface);
+            padding: 14px 24px;
+            border-radius: var(--radius-full);
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s, transform 0.3s;
-            z-index: 200;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+            z-index: 100;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .toast.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
 
-        .msg-box {
-            text-align: center;
-            margin-top: 40px;
-            color: var(--md-sys-color-on-surface-variant);
-            padding: 20px;
-            background: rgba(255,29,16,0.05);
-            border-radius: 12px;
+        /* --- Icons Button --- */
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--md-sys-color-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
-        .msg-sub {
-            font-size: 12px;
-            margin-top: 8px;
-            opacity: 0.7;
-        }
+        .icon-btn:active { background-color: rgba(255,255,255,0.1); }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Ripple */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+        /* Error/Empty State */
+        .state-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 0.4s forwards;
+        }
+        .state-icon { font-size: 64px; margin-bottom: 16px; color: var(--md-sys-color-outline); }
+        .state-text { color: var(--md-sys-color-on-surface-variant); max-width: 250px; }
+
     </style>
 </head>
 <body>
 
-    <header>
+    <header id="header">
+        <div class="header-top">
+            <span class="material-symbols-rounded brand-icon">vpn_key</span>
+            <span class="display-small app-title">V2Config</span>
+        </div>
+        
+        <!-- Last Updated Block -->
+        <div class="update-info body-small">
+            <div class="update-badge">
+                <span class="material-symbols-rounded" style="font-size: 14px;">history</span>
+                <span id="updateText">Загрузка информации...</span>
+            </div>
+        </div>
     </header>
 
-    <div class="controls">
-        <div class="filter-card">
-            <div class="toggle-row">
-                <span class="toggle-label">Whitelist (Белый список)</span>
-                <label class="switch">
-                    <input type="checkbox" id="checkWhite" checked>
-                    <span class="slider"></span>
-                </label>
+    <div class="main-container" id="scrollContainer">
+        <div class="content-wrapper">
+            
+            <!-- Chips Filters -->
+            <div class="filters-container">
+                <div class="filter-chip active" id="chipWhite" onclick="toggleFilter('white')">
+                    <span class="material-symbols-rounded check-icon">check</span>
+                    <span class="label-large">Белый список</span>
+                </div>
+                <div class="filter-chip active" id="chipBlack" onclick="toggleFilter('black')">
+                    <span class="material-symbols-rounded check-icon">check</span>
+                    <span class="label-large">Черный список</span>
+                </div>
             </div>
-            <div class="toggle-row">
-                <span class="toggle-label">Blacklist (Черный список)</span>
-                <label class="switch">
-                    <input type="checkbox" id="checkBlack" checked>
-                    <span class="slider"></span>
-                </label>
+
+            <div id="list" class="list-container">
+                <!-- Content will be injected here -->
             </div>
         </div>
     </div>
 
-    <div id="list" class="list-container">
-        <!-- JS Injection -->
-    </div>
-
-    <div class="bottom-bar" id="bottomBar">
-        <button class="download-all-btn" id="btnDownloadAll" onclick="downloadAllVisible()">
-            <span class="material-symbols-rounded">folder_zip</span>
-            Скачать всё (ZIP)
+    <!-- FAB -->
+    <div class="fab-container" id="fabContainer">
+        <button class="fab-extended label-large" id="btnDownloadAll" onclick="downloadAllVisible()">
+            <span class="material-symbols-rounded" style="font-size: 24px">folder_zip</span>
+            Скачать ZIP
         </button>
     </div>
 
-    <div id="toast" class="toast">Текст уведомления</div>
+    <div id="toast" class="toast body-medium">Уведомление</div>
 
     <script>
-        const REPO = 'igareck/vpn-configs-for-russia';
-        const API = `https://api.github.com/repos/${REPO}/contents/`;
+        const REPO_OWNER = 'igareck';
+        const REPO_NAME = 'vpn-configs-for-russia';
+        const API_CONTENTS = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/`;
+        const API_REPO = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
 
-        // --- АГРЕССИВНАЯ ПРОВЕРКА IN-APP BROWSER (ТЕЛЕГРАМ) ---
+        // --- Environment Check ---
         const ua = navigator.userAgent.toLowerCase();
-
-        // 1. Поиск явных названий мессенджеров
         const isMessenger = ua.includes('telegram') || ua.includes('instagram') || ua.includes('vk');
-        
-        // 2. Поиск признаков Android WebView (используется телеграмом на Android)
-        // Обычный Chrome: "Android ... Chrome/..."
-        // Встроенный WebView часто имеет: "...; wv) ..." ИЛИ "... Version/4.0 Chrome/..."
         const isAndroidWebView = /wv/.test(ua) || (ua.includes('android') && ua.includes('version/'));
+        const CAN_DOWNLOAD = !isMessenger && !isAndroidWebView;
 
-        // 3. iOS PWA / Webview
-        const isIosStandalone = window.navigator.standalone === true;
-
-        // Если это мессенджер, WebView или PWA - считаем, что скачивать нельзя
-        // !isAndroidWebView - это самое важное изменение, оно отсечет Telegram на Xiaomi
-        const CAN_DOWNLOAD = !isMessenger && !isAndroidWebView && !isIosStandalone;
-
-        let rawFiles = [];
-        let currentVisibleFiles = [];
-        
+        // UI Refs
         const elList = document.getElementById('list');
-        const swWhite = document.getElementById('checkWhite');
-        const swBlack = document.getElementById('checkBlack');
-        const toastEl = document.getElementById('toast');
+        const scrollContainer = document.getElementById('scrollContainer');
+        const header = document.getElementById('header');
         const btnDownloadAll = document.getElementById('btnDownloadAll');
-        const bottomBar = document.getElementById('bottomBar');
+        const toastEl = document.getElementById('toast');
+        const updateTextEl = document.getElementById('updateText');
+        const fabContainer = document.getElementById('fabContainer');
 
-        // Инициализация
+        // State
+        let rawFiles = [];
+        let filterWhite = true;
+        let filterBlack = true;
+
+        // --- Scroll Effect ---
+        scrollContainer.addEventListener('scroll', () => {
+            const threshold = 20;
+            if (scrollContainer.scrollTop > threshold) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // --- Initial Load ---
         (async () => {
-            
-            // Если скачивание запрещено (обнаружен WebView), скрываем интерфейс загрузки
             if (!CAN_DOWNLOAD) {
-                if (bottomBar) bottomBar.style.display = 'none';
-                elList.style.paddingBottom = '20px'; 
-                document.documentElement.style.setProperty('--bottom-bar-height', '0px');
-                toastEl.style.bottom = '30px'; 
+                fabContainer.style.display = 'none';
+                document.querySelector('.content-wrapper').style.paddingBottom = '20px';
             }
 
-            elList.innerHTML = '<div class="msg-box">Загрузка списка конфигураций...</div>';
+            // Show Skeletons immediately
+            renderSkeletons();
+
             try {
-                const res = await fetch(API);
-                if(!res.ok) throw new Error();
-                const data = await res.json();
-                
+                // Fetch Content and Repo Info in parallel
+                const [contentRes, repoRes] = await Promise.all([
+                    fetch(API_CONTENTS),
+                    fetch(API_REPO)
+                ]);
+
+                // 1. Process Update Time
+                if (repoRes.ok) {
+                    const repoData = await repoRes.json();
+                    const lastPush = new Date(repoData.pushed_at);
+                    // ТЕПЕРЬ С МИЛЛИСЕКУНДАМИ ПО ПРИКОЛУ
+                    updateTextEl.textContent = `Обновлено: ${formatDate(lastPush)}`;
+                } else {
+                    updateTextEl.textContent = 'Дата неизвестна';
+                }
+
+                // 2. Process Files
+                if (!contentRes.ok) throw new Error('API Error');
+                const data = await contentRes.json();
+
                 rawFiles = data.filter(f => 
                     f.type === 'file' && 
                     f.name.toLowerCase().includes('mobile')
                 );
-                
-                render();
+
+                renderList();
+
             } catch (e) {
-                elList.innerHTML = `
-                    <div class="msg-box">
-                        Ошибка доступа к GitHub API.
-                        <div class="msg-sub">Попробуйте включить любой VPN для первого обновления списка.</div>
-                    </div>`;
+                console.error(e);
+                renderError();
+                updateTextEl.textContent = 'Ошибка сети';
             }
         })();
 
-        // События
-        swWhite.onchange = render;
-        swBlack.onchange = render;
+        // --- Formatting Date (UPDATED FOR MILLISECONDS) ---
+        function formatDate(date) {
+            // "Чисто по приколу" - добавляем миллисекунды
+            // Убрал логику "2 часа назад", чтобы всегда видеть красивые цифры
+            return date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                fractionalSecondDigits: 3 // Вот они, родимые
+            });
+        }
 
-        function render() {
+        // --- Render Functions ---
+
+        function renderSkeletons() {
+            let html = '';
+            for(let i=0; i<6; i++) {
+                html += `
+                    <div class="card skeleton-card">
+                        <div class="card-icon-box skeleton skeleton-icon"></div>
+                        <div class="card-content">
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-sub"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            elList.innerHTML = html;
+        }
+
+        function renderError() {
+            elList.innerHTML = `
+                <div class="state-container">
+                    <span class="material-symbols-rounded state-icon">cloud_off</span>
+                    <div class="title-medium">Не удалось загрузить</div>
+                    <div class="body-medium state-text" style="margin-top:8px">Проверьте интернет или включите VPN для доступа к GitHub API</div>
+                </div>`;
+        }
+
+        function toggleFilter(type) {
+            if (type === 'white') {
+                filterWhite = !filterWhite;
+                document.getElementById('chipWhite').classList.toggle('active');
+            } else {
+                filterBlack = !filterBlack;
+                document.getElementById('chipBlack').classList.toggle('active');
+            }
+            renderList();
+        }
+
+        function renderList() {
             elList.innerHTML = '';
-            
-            const showW = swWhite.checked;
-            const showB = swBlack.checked;
 
-            currentVisibleFiles = rawFiles.filter(f => {
+            const visibleFiles = rawFiles.filter(f => {
                 const n = f.name.toLowerCase();
-                const isW = n.includes('white');
-                const isB = n.includes('black');
-                if (isW && showW) return true;
-                if (isB && showB) return true;
+                if (n.includes('white') && filterWhite) return true;
+                if (n.includes('black') && filterBlack) return true;
                 return false;
             });
 
-            // Логика отображения кнопки "Скачать всё"
-            if (CAN_DOWNLOAD) {
-                if (currentVisibleFiles.length === 0) {
-                    btnDownloadAll.style.opacity = '0.5';
-                    btnDownloadAll.style.pointerEvents = 'none';
-                    elList.innerHTML = '<div class="msg-box">Нет конфигураций для выбранных фильтров</div>';
-                    return;
-                } else {
-                    btnDownloadAll.style.opacity = '1';
-                    btnDownloadAll.style.pointerEvents = 'auto';
-                }
-            } else if (currentVisibleFiles.length === 0) {
-                elList.innerHTML = '<div class="msg-box">Нет конфигураций для выбранных фильтров</div>';
+            // Empty State
+            if (visibleFiles.length === 0) {
+                elList.innerHTML = `
+                    <div class="state-container">
+                        <span class="material-symbols-rounded state-icon">filter_alt_off</span>
+                        <div class="body-medium">Ничего не выбрано</div>
+                    </div>`;
+                updateFabState(false);
                 return;
             }
+            updateFabState(true);
 
-            currentVisibleFiles.forEach(f => {
+            // Render Items with Staggered Animation
+            visibleFiles.forEach((f, index) => {
                 const item = document.createElement('div');
                 item.className = 'card';
+                // Add staggered animation delay
+                item.style.animationDelay = `${index * 50}ms`;
                 
-                let type = 'VPN';
+                item.onclick = (e) => {
+                    createRipple(e, item);
+                    copyContent(f.download_url);
+                };
+
+                let typeLabel = 'VPN';
                 let icon = 'vpn_lock';
-                if(f.name.includes('ovpn')) { type = 'OpenVPN'; icon = 'lock_open'; }
-                if(f.name.includes('conf')) { type = 'WireGuard'; icon = 'router'; }
+                let typeColor = 'var(--md-sys-color-primary)';
+                
+                if(f.name.includes('ovpn')) { 
+                    typeLabel = 'OpenVPN'; 
+                    icon = 'lock_open'; 
+                }
+                else if(f.name.includes('conf')) { 
+                    typeLabel = 'WireGuard'; 
+                    icon = 'router'; 
+                }
 
                 const cleanName = f.name
                     .replace('antizapret-', '')
@@ -439,151 +633,176 @@
                     .replace('.ovpn', '')
                     .replace('.conf', '');
 
-                // Кнопка скачивания только если CAN_DOWNLOAD = true
                 const downloadBtnHtml = CAN_DOWNLOAD ? `
-                    <button class="action-btn download" onclick="downloadSecure(this, '${f.download_url}', '${f.name}')" title="Скачать файл">
+                    <button class="icon-btn" onclick="event.stopPropagation(); downloadSecure(this, '${f.download_url}', '${f.name}')">
                         <span class="material-symbols-rounded">download</span>
                     </button>
                 ` : '';
 
                 item.innerHTML = `
-                    <div class="card-info" onclick="copyContent(this.nextElementSibling.querySelector('.copy-btn'), '${f.download_url}')">
-                        <div class="icon-box">
-                            <span class="material-symbols-rounded">${icon}</span>
-                        </div>
-                        <div class="file-details">
-                            <div class="file-name" title="${f.name}">${cleanName}</div>
-                            <div class="file-tag">${type}</div>
+                    <div class="card-icon-box">
+                        <span class="material-symbols-rounded">${icon}</span>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="card-title title-medium">${cleanName}</div>
+                        <div class="card-meta body-small">
+                            <span class="tag">${typeLabel}</span>
+                            <span>• Нажми чтобы скопировать</span>
                         </div>
                     </div>
-                    <div class="actions">
-                        <button class="action-btn copy-btn" onclick="copyContent(this, '${f.download_url}')" title="Копировать содержимое">
-                            <span class="material-symbols-rounded">content_copy</span>
-                        </button>
-                        ${downloadBtnHtml}
-                    </div>
+                    
+                    ${downloadBtnHtml}
                 `;
                 elList.appendChild(item);
             });
         }
 
-        async function copyContent(btn, url) {
-            if(btn.classList.contains('loading')) return;
-            const originalIcon = btn.innerHTML;
-            btn.classList.add('loading');
-
-            try {
-                const response = await fetch(url);
-                if(!response.ok) throw new Error('Ошибка сети');
-                const text = await response.text();
-
-                await navigator.clipboard.writeText(text);
-
-                btn.classList.remove('loading');
-                btn.innerHTML = '<span class="material-symbols-rounded">check</span>';
-                showToast('Скопировано в буфер!');
-
-                setTimeout(() => {
-                    btn.innerHTML = '<span class="material-symbols-rounded">content_copy</span>';
-                }, 2000);
-
-            } catch (err) {
-                console.error(err);
-                btn.classList.remove('loading');
-                showToast('Ошибка копирования');
+        function updateFabState(hasItems) {
+            if (!CAN_DOWNLOAD) return;
+            if (hasItems) {
+                btnDownloadAll.style.opacity = '1';
+                btnDownloadAll.style.pointerEvents = 'auto';
+                btnDownloadAll.style.transform = 'scale(1)';
+            } else {
+                btnDownloadAll.style.opacity = '0';
+                btnDownloadAll.style.pointerEvents = 'none';
+                btnDownloadAll.style.transform = 'scale(0.8)';
             }
         }
 
-        async function downloadAllVisible() {
-            if (!CAN_DOWNLOAD) return;
-            if (currentVisibleFiles.length === 0) return;
+        // --- Logic (Copy/Download) ---
 
-            const btnText = btnDownloadAll.innerHTML;
-            btnDownloadAll.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Упаковка...';
-            btnDownloadAll.style.pointerEvents = 'none';
-
+        async function copyContent(url) {
             try {
-                const zip = new JSZip();
-                const promises = currentVisibleFiles.map(async file => {
-                    try {
-                        const response = await fetch(file.download_url);
-                        if (!response.ok) throw new Error(`Fail ${file.name}`);
-                        const blob = await response.blob();
-                        zip.file(file.name, blob);
-                    } catch (e) {
-                        console.error(e);
-                    }
-                });
+                showToast('Загрузка конфига...', 0);
+                const response = await fetch(url);
+                if(!response.ok) throw new Error();
+                const text = await response.text();
 
-                await Promise.all(promises);
-                const content = await zip.generateAsync({type:"blob"});
-                const blobUrl = window.URL.createObjectURL(content);
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = "vpn_configs_red.zip";
-                document.body.appendChild(link);
-                link.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(blobUrl);
-                }, 1000);
-                
-                showToast('Архив скачан!');
-
+                await navigator.clipboard.writeText(text);
+                showToast('Скопировано в буфер', 2000);
             } catch (err) {
-                console.error(err);
-                showToast('Ошибка при создании архива');
-            } finally {
-                btnDownloadAll.innerHTML = btnText;
-                btnDownloadAll.style.pointerEvents = 'auto';
+                showToast('Ошибка копирования', 2000);
             }
         }
 
         async function downloadSecure(btn, url, fileName) {
             if (!CAN_DOWNLOAD) return;
-            if(btn.classList.contains('loading')) return;
-            btn.classList.add('loading');
+            
+            const iconSpan = btn.querySelector('span');
+            const originalIcon = iconSpan.innerHTML;
+            
+            // Inline Spinner for button
+            iconSpan.innerHTML = 'progress_activity';
+            iconSpan.classList.add('spin-anim'); // Add simple css keyframe if needed, or use symbol
+            iconSpan.style.animation = 'rotation 1s linear infinite';
             
             try {
                 const response = await fetch(url);
-                if(!response.ok) throw new Error('Network error');
+                if(!response.ok) throw new Error();
                 const blob = await response.blob();
-                const newBlob = new Blob([blob], { type: 'application/octet-stream' });
-                const blobUrl = window.URL.createObjectURL(newBlob);
-                
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = fileName;
-                link.target = "_blank"; 
-                
-                document.body.appendChild(link);
-                link.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(blobUrl);
-                    btn.classList.remove('loading');
-                }, 2000);
-                
+                const blobUrl = window.URL.createObjectURL(blob);
+                triggerDownload(blobUrl, fileName);
             } catch (err) {
-                console.error(err);
-                btn.classList.remove('loading');
-                if(confirm('Не удалось скачать скрыто. Открыть ссылку напрямую?')) {
-                    window.open(url, '_blank');
-                }
+                if(confirm('Ошибка. Открыть ссылку?')) window.open(url, '_blank');
+            } finally {
+                iconSpan.style.animation = '';
+                iconSpan.innerHTML = originalIcon;
             }
         }
 
+        async function downloadAllVisible() {
+            const filesToDownload = rawFiles.filter(f => {
+                const n = f.name.toLowerCase();
+                if (n.includes('white') && filterWhite) return true;
+                if (n.includes('black') && filterBlack) return true;
+                return false;
+            });
+
+            if (filesToDownload.length === 0) return;
+
+            const iconSpan = btnDownloadAll.querySelector('span');
+            const originalIcon = iconSpan.innerHTML;
+            
+            iconSpan.innerHTML = 'progress_activity';
+            iconSpan.style.animation = 'rotation 1s linear infinite';
+            
+            try {
+                const zip = new JSZip();
+                const promises = filesToDownload.map(async file => {
+                    try {
+                        const response = await fetch(file.download_url);
+                        if (!response.ok) throw new Error();
+                        const blob = await response.blob();
+                        zip.file(file.name, blob);
+                    } catch (e) { console.error(e); }
+                });
+
+                await Promise.all(promises);
+                const content = await zip.generateAsync({type:"blob"});
+                const blobUrl = window.URL.createObjectURL(content);
+                
+                triggerDownload(blobUrl, "vpn_configs.zip");
+                showToast('Архив скачан', 3000);
+
+            } catch (err) {
+                showToast('Ошибка создания архива', 3000);
+            } finally {
+                iconSpan.style.animation = '';
+                iconSpan.innerHTML = originalIcon;
+            }
+        }
+
+        function triggerDownload(blobUrl, fileName) {
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(blobUrl);
+            }, 1000);
+        }
+
+        // --- UX Utilities ---
+
         let toastTimeout;
-        function showToast(msg) {
+        function showToast(msg, duration = 3000) {
             toastEl.textContent = msg;
             toastEl.classList.add('show');
             clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toastEl.classList.remove('show');
-            }, 3000);
+            if (duration > 0) {
+                toastTimeout = setTimeout(() => {
+                    toastEl.classList.remove('show');
+                }, duration);
+            }
         }
+
+        function createRipple(event, element) {
+            const circle = document.createElement("span");
+            const diameter = Math.max(element.clientWidth, element.clientHeight);
+            const radius = diameter / 2;
+            const rect = element.getBoundingClientRect();
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - rect.left - radius}px`;
+            circle.style.top = `${event.clientY - rect.top - radius}px`;
+            circle.classList.add("ripple");
+
+            const ripple = element.getElementsByClassName("ripple")[0];
+            if (ripple) ripple.remove();
+
+            element.appendChild(circle);
+        }
+
+        // Add keyframe for spinner via JS if convenient, or rely on CSS
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        `;
+        document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>
